@@ -30,7 +30,7 @@ var progressBar = document.getElementById('progressBar');
 var steps = Array.prototype.slice.call(document.querySelectorAll('.quiz-step'));
 var answerButtons = Array.prototype.slice.call(document.querySelectorAll('.answer'));
 
-var totalSteps = 4;
+var totalSteps = 6;
 var currentStep = 1;
 var answers = {};
 var answerLabels = {};
@@ -64,26 +64,34 @@ function showStep(step) {
 }
 
 function buildResultCopy() {
+  var dream = answers.sonho;
   var budget = answers.orcamento;
   var guests = answers.convidados;
   var stage = answers.fase;
   var concern = answers.preocupacao;
 
-  var title = 'Seu planejamento tem espaço para ficar muito mais estratégico.';
+  var title = 'Seu casamento pode estar mais perto do que você imagina.';
   var text = 'Pelas suas respostas, organização, definição de prioridades e negociação podem fazer uma diferença importante no valor final do seu casamento.';
 
+  if (dream === 'adiando_dinheiro') {
+    title = 'Seu casamento não precisa continuar sendo adiado por causa do dinheiro.';
+    text = 'Você já tem o sonho. Agora o próximo passo é transformar esse sonho em decisões mais estratégicas, organizando prioridades e o orçamento antes que os valores pareçam impossíveis.';
+  } else if (dream === 'valores_assustam') {
+    title = 'Os orçamentos que você viu até agora não precisam definir o seu casamento.';
+    text = 'Valores altos assustam, mas planejamento, prioridades claras e negociação podem mudar bastante a forma como você distribui o dinheiro em cada escolha.';
+  } else if (dream === 'medo_orcamento') {
+    title = 'Você ainda pode retomar o controle antes que o orçamento escape.';
+    text = 'O fato de você já estar atenta aos gastos é importante. Agora o foco é revisar prioridades, comparar propostas e tomar decisões com um teto claro.';
+  }
+
   if (budget === 'ate_10') {
-    title = 'Sua meta de até R$10 mil pede estratégia desde o começo.';
-    text = 'Para buscar esse teto com mais segurança, cada escolha precisa ter prioridade definida, margem para negociação e controle de orçamento. É exatamente aí que um método de planejamento faz diferença.';
+    text += ' Como sua meta é ficar em até R$10 mil, cada escolha precisa ter prioridade definida, margem para negociação e acompanhamento de orçamento.';
   } else if (budget === '10_15') {
-    title = 'Seu orçamento tem espaço para escolhas muito mais inteligentes.';
-    text = 'Com prioridades claras e negociação bem feita, você pode direcionar mais dinheiro para o que realmente importa e reduzir gastos que não acrescentam valor ao casamento.';
+    text += ' Na faixa de R$10 mil a R$15 mil, uma estratégia bem organizada pode ajudar você a colocar mais dinheiro no que realmente importa e reduzir excessos.';
   } else if (budget === '15_20') {
-    title = 'Você pode usar esse orçamento com muito mais intenção.';
-    text = 'Mesmo com uma faixa maior, organização e negociação ajudam a evitar excessos e permitem investir melhor nas partes do casamento que realmente importam para vocês.';
+    text += ' Mesmo com uma faixa maior, organização e negociação ajudam a evitar excessos e permitem investir melhor nas partes do casamento que realmente importam para vocês.';
   } else if (budget === 'indefinido') {
-    title = 'Definir seu teto agora pode evitar que o orçamento escape depois.';
-    text = 'Antes de fechar fornecedores, estabelecer prioridades e um limite de gasto ajuda a tomar decisões melhores e evita que pequenos extras se acumulem sem controle.';
+    text += ' Definir um teto antes de fechar mais fornecedores pode evitar que pequenos extras se acumulem sem controle.';
   }
 
   if (guests === 'mais_70') {
@@ -106,12 +114,14 @@ function buildWhatsAppUrl() {
   var message = [
     'Oi! Fiz o diagnóstico do Projeto SIM no Azul 💙',
     '',
+    '• Meu momento: ' + (answerLabels.sonho || 'não informado'),
+    '• Interesse: ' + (answerLabels.interesse || 'não informado'),
     '• Convidados: ' + (answerLabels.convidados || 'não informado'),
     '• Fase: ' + (answerLabels.fase || 'não informada'),
     '• Maior preocupação: ' + (answerLabels.preocupacao || 'não informada'),
     '• Orçamento desejado: ' + (answerLabels.orcamento || 'não informado'),
     '',
-    'Quero entender como funciona o Projeto SIM no Azul.'
+    'Quero receber as informações e entender como o Projeto SIM no Azul pode me ajudar.'
   ].join('\n');
 
   return 'https://wa.me/5531972368967?text=' + encodeURIComponent(message);
@@ -128,6 +138,8 @@ function showResult() {
   resultSection.classList.remove('hidden');
 
   trackGA('quiz_complete', {
+    sonho: answers.sonho || 'unknown',
+    interesse: answers.interesse || 'unknown',
     convidados: answers.convidados || 'unknown',
     fase: answers.fase || 'unknown',
     preocupacao: answers.preocupacao || 'unknown',
@@ -222,6 +234,8 @@ document.querySelectorAll('[data-whatsapp]').forEach(function (link) {
     trackGA('whatsapp_click', {
       cta_position: position,
       quiz_completed: true,
+      sonho: answers.sonho || 'unknown',
+      interesse: answers.interesse || 'unknown',
       convidados: answers.convidados || 'unknown',
       fase: answers.fase || 'unknown',
       preocupacao: answers.preocupacao || 'unknown',
@@ -230,12 +244,10 @@ document.querySelectorAll('[data-whatsapp]').forEach(function (link) {
   });
 });
 
-// Engagement: visitor remained on the page for at least 10 seconds.
 window.setTimeout(function () {
   trackGA('engaged_10s', { page_location: window.location.href });
 }, 10000);
 
-// Engagement: visitor reached at least 50% of the currently rendered page once.
 var scroll50Sent = false;
 function maybeTrackScroll50() {
   if (scroll50Sent) return;
