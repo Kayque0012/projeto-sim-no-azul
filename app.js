@@ -1,9 +1,15 @@
 'use strict';
 
+var FUNNEL_VERSION = 'quiz_v2_emotional_6q_2026_10_16';
+var PAGE_OPENED_AT = Date.now();
+
 function trackGA(eventName, params) {
   try {
     if (typeof window.gtag === 'function') {
-      window.gtag('event', eventName, params || {});
+      var payload = Object.assign({
+        funnel_version: FUNNEL_VERSION
+      }, params || {});
+      window.gtag('event', eventName, payload);
     }
   } catch (_) {}
 }
@@ -14,6 +20,11 @@ function trackMetaCustom(eventName, params) {
       window.fbq('trackCustom', eventName, params || {});
     }
   } catch (_) {}
+}
+
+function secondsSince(timestamp) {
+  if (!timestamp) return 0;
+  return Math.max(0, Math.round((Date.now() - timestamp) / 1000));
 }
 
 var hero = document.getElementById('hero');
@@ -30,11 +41,29 @@ var progressBar = document.getElementById('progressBar');
 var steps = Array.prototype.slice.call(document.querySelectorAll('.quiz-step'));
 var answerButtons = Array.prototype.slice.call(document.querySelectorAll('.answer'));
 
+var questionNames = {
+  1: 'sonho',
+  2: 'interesse',
+  3: 'convidados',
+  4: 'fase',
+  5: 'preocupacao',
+  6: 'orcamento'
+};
+
 var totalSteps = 6;
 var currentStep = 1;
 var answers = {};
 var answerLabels = {};
 var quizCompleted = false;
+var quizStarted = false;
+var quizStartedAt = null;
+var resultShownAt = null;
+var abandonSent = false;
+var ctaViewSent = false;
+
+function answeredCount() {
+  return Object.keys(answers).length;
+}
 
 function scrollToElement(element) {
   if (!element) return;
@@ -60,6 +89,21 @@ function showStep(step) {
   });
   backQuestion.classList.toggle('hidden', step === 1);
   updateProgress(step);
+
+  var percent = Math.round((step / totalSteps) * 100);
+  var params = {
+    step_number: step,
+    question_name: questionNames[step] || 'unknown',
+    progress_percent: percent,
+    answered_count: answeredCount(),
+    quiz_elapsed_sec: secondsSince(quizStartedAt)
+  };
+
+  // Generic event: ideal para Explorações no GA4.
+  trackGA('quiz_step_view', params);
+  // Evento individual: ideal para bater o olho em Relatórios > Eventos.
+  trackGA('quiz_view_step_' + step, params);
+
   scrollToElement(quizSection);
 }
 
@@ -130,6 +174,7 @@ function buildWhatsAppUrl() {
 function showResult() {
   if (quizCompleted) return;
   quizCompleted = true;
+  resultShownAt = Date.now();
 
   buildResultCopy();
   resultWhatsapp.href = buildWhatsAppUrl();
@@ -137,14 +182,19 @@ function showResult() {
   quizSection.classList.add('hidden');
   resultSection.classList.remove('hidden');
 
-  trackGA('quiz_complete', {
+  var completeParams = {
+    answered_count: answeredCount(),
+    quiz_duration_sec: secondsSince(quizStartedAt),
     sonho: answers.sonho || 'unknown',
     interesse: answers.interesse || 'unknown',
     convidados: answers.convidados || 'unknown',
     fase: answers.fase || 'unknown',
     preocupacao: answers.preocupacao || 'unknown',
     orcamento: answers.orcamento || 'unknown'
-  });
+  };
+
+  trackGA('quiz_complete', completeParams);
+  trackGA('result_view', completeParams);
 
   trackMetaCustom('QuizComplete', {
     content_name: 'Diagnostico Projeto SIM'
@@ -161,11 +211,19 @@ if (startQuiz) {
     quizSection.classList.remove('hidden');
     resultSection.classList.add('hidden');
     quizCompleted = false;
+    quizStarted = true;
+    quizStartedAt = Date.now();
+    resultShownAt = null;
+    abandonSent = false;
+    ctaViewSent = false;
     currentStep = 1;
     answers = {};
     answerLabels = {};
 
-    trackGA('quiz_start', { quiz_name: 'diagnostico_projeto_sim' });
+    trackGA('quiz_start', {
+      quiz_name: 'diagnostico_projeto_sim',
+      seconds_before_start: secondsSince(PAGE_OPENED_AT)
+    });
     trackMetaCustom('QuizStart', { content_name: 'Diagnostico Projeto SIM' });
     showStep(1);
   });
@@ -180,15 +238,25 @@ answerButtons.forEach(function (button) {
     var label = button.getAttribute('data-label');
     var stepNode = button.closest('.quiz-step');
     var step = stepNode ? Number(stepNode.getAttribute('data-step')) : currentStep;
+    var percent = Math.round((step / totalSteps) * 100);
 
     answers[question] = value;
     answerLabels[question] = label;
 
-    trackGA('quiz_step_' + step, {
-      question: question,
-      answer: value,
+    var answerParams = {
+      step_number: step,
+      question_name: question,
+      answer_value: value,
+      progress_percent: percent,
+      answered_count: answeredCount(),
+      quiz_elapsed_sec: secondsSince(quizStartedAt),
       quiz_name: 'diagnostico_projeto_sim'
-    });
+    };
+
+    // Evento genérico com todos os parâmetros.
+    trackGA('quiz_answer', answerParams);
+    // Eventos individuais para enxergar instantaneamente onde há queda.
+    trackGA('quiz_step_' + step, answerParams);
 
     button.classList.add('selected');
 
@@ -206,12 +274,36 @@ answerButtons.forEach(function (button) {
 if (backQuestion) {
   backQuestion.addEventListener('click', function (event) {
     if (!event.isTrusted) return;
-    if (currentStep > 1) showStep(currentStep - 1);
+    if (currentStep > 1) {
+      trackGA('quiz_back_click', {
+        from_step: currentStep,
+        to_step: currentStep - 1,
+        answered_count: answeredCount(),
+        quiz_elapsed_sec: secondsSince(quizStartedAt)
+      });
+      showStep(currentStep - 1);
+    }
   });
 }
 
-// The standard Meta Contact event is intentionally fired ONLY after the quiz,
-// when the visitor clicks the final WhatsApp CTA.
+// Mede quem realmente chegou a VER o CTA final, não apenas quem concluiu o quiz.
+if (resultWhatsapp && 'IntersectionObserver' in window) {
+  var ctaObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting || ctaViewSent || !quizCompleted) return;
+      ctaViewSent = true;
+      trackGA('whatsapp_cta_view', {
+        answered_count: answeredCount(),
+        quiz_duration_sec: secondsSince(quizStartedAt),
+        seconds_on_result: secondsSince(resultShownAt)
+      });
+      ctaObserver.disconnect();
+    });
+  }, { threshold: 0.5 });
+  ctaObserver.observe(resultWhatsapp);
+}
+
+// O evento padrão Contact da Meta continua disparando SOMENTE no clique final do WhatsApp.
 document.querySelectorAll('[data-whatsapp]').forEach(function (link) {
   link.addEventListener('click', function (event) {
     if (!event.isTrusted) return;
@@ -234,6 +326,9 @@ document.querySelectorAll('[data-whatsapp]').forEach(function (link) {
     trackGA('whatsapp_click', {
       cta_position: position,
       quiz_completed: true,
+      answered_count: answeredCount(),
+      quiz_duration_sec: secondsSince(quizStartedAt),
+      seconds_on_result: secondsSince(resultShownAt),
       sonho: answers.sonho || 'unknown',
       interesse: answers.interesse || 'unknown',
       convidados: answers.convidados || 'unknown',
@@ -244,24 +339,66 @@ document.querySelectorAll('[data-whatsapp]').forEach(function (link) {
   });
 });
 
-window.setTimeout(function () {
-  trackGA('engaged_10s', { page_location: window.location.href });
-}, 10000);
+// Tempo de permanência: ajuda a separar clique acidental de visita interessada.
+[10, 30, 60].forEach(function (seconds) {
+  window.setTimeout(function () {
+    trackGA('engaged_' + seconds + 's', {
+      quiz_started: quizStarted,
+      quiz_completed: quizCompleted,
+      current_step: quizStarted ? currentStep : 0,
+      answered_count: answeredCount()
+    });
+  }, seconds * 1000);
+});
 
-var scroll50Sent = false;
-function maybeTrackScroll50() {
-  if (scroll50Sent) return;
+// Se ficou 15 s na landing sem iniciar, isso aponta fricção na promessa/CTA inicial.
+window.setTimeout(function () {
+  if (!quizStarted) {
+    trackGA('quiz_not_started_15s', {
+      seconds_on_page: 15
+    });
+  }
+}, 15000);
+
+// Scroll da landing, antes do quiz começar.
+var scrollMilestonesSent = {};
+function trackLandingScroll() {
+  if (quizStarted) return;
   var doc = document.documentElement;
   var scrollTop = window.pageYOffset || doc.scrollTop || 0;
   var viewport = window.innerHeight || doc.clientHeight || 0;
   var fullHeight = Math.max(doc.scrollHeight, document.body ? document.body.scrollHeight : 0);
   if (!fullHeight) return;
-  var progress = (scrollTop + viewport) / fullHeight;
-  if (progress >= 0.5) {
-    scroll50Sent = true;
-    trackGA('scroll_50', { page_location: window.location.href });
-    window.removeEventListener('scroll', maybeTrackScroll50);
+  var progress = Math.round(((scrollTop + viewport) / fullHeight) * 100);
+
+  [25, 50, 75, 90].forEach(function (milestone) {
+    if (progress >= milestone && !scrollMilestonesSent[milestone]) {
+      scrollMilestonesSent[milestone] = true;
+      trackGA('landing_scroll_' + milestone, {
+        scroll_percent: milestone
+      });
+    }
+  });
+}
+window.addEventListener('scroll', trackLandingScroll, { passive: true });
+trackLandingScroll();
+
+// Registra o ponto de abandono quando a pessoa sai/recarrega a página.
+function trackExitPoint() {
+  if (quizStarted && !quizCompleted && !abandonSent) {
+    abandonSent = true;
+    trackGA('quiz_abandon', {
+      current_step: currentStep,
+      question_name: questionNames[currentStep] || 'unknown',
+      answered_count: answeredCount(),
+      quiz_elapsed_sec: secondsSince(quizStartedAt),
+      transport_type: 'beacon'
+    });
+  } else if (!quizStarted) {
+    trackGA('landing_exit_without_quiz', {
+      seconds_on_page: secondsSince(PAGE_OPENED_AT),
+      transport_type: 'beacon'
+    });
   }
 }
-window.addEventListener('scroll', maybeTrackScroll50, { passive: true });
-maybeTrackScroll50();
+window.addEventListener('pagehide', trackExitPoint);
