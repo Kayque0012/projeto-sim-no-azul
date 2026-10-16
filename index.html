@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Projeto SIM no Azul | Casamento com orçamento sob controle</title>
-  <meta name="description" content="Descubra como planejar um casamento completo com orçamento-alvo de até R$10 mil, definindo prioridades, economizando melhor e negociando com fornecedores.">
+  <title>Projeto SIM no Azul | Diagnóstico do casamento</title>
+  <meta name="description" content="Faça um diagnóstico rápido e descubra como organizar seu casamento com mais estratégia, clareza e controle de orçamento.">
   <meta name="theme-color" content="#163d53">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
-  <meta property="og:title" content="Projeto SIM no Azul | Seu grande dia com equilíbrio">
-  <meta property="og:description" content="Descubra uma forma mais inteligente de planejar seu casamento e buscar manter o orçamento sob controle.">
+  <meta property="og:title" content="Projeto SIM no Azul | Seu casamento pode caber em um orçamento menor?">
+  <meta property="og:description" content="Responda 4 perguntas rápidas e veja onde organização, prioridades e negociação podem fazer diferença no seu casamento.">
   <meta property="og:image" content="assets/logo.png">
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="stylesheet" href="styles.css">
@@ -37,30 +37,113 @@
   fbq('track', 'PageView');
   </script>
   <!-- End Meta Pixel Code -->
+
   <script src="app.js" defer></script>
 </head>
 <body>
   <noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=1123167570472661&amp;ev=PageView&amp;noscript=1"></noscript>
+
   <main>
-    <section class="hero" aria-labelledby="headline">
+    <section class="hero" id="hero" aria-labelledby="headline">
       <img class="logo" src="assets/logo.webp" width="1254" height="1254" alt="Projeto SIM no Azul — Planejamento financeiro para o seu grande dia" fetchpriority="high">
-      <p class="eyebrow">CASAMENTO REAL. ORÇAMENTO SOB CONTROLE.</p>
-      <h1 id="headline">Descubra como planejar um casamento completo com <em>orçamento-alvo de até R$10 mil.</em></h1>
-      <p class="intro">O Projeto SIM no Azul mostra como organizar cada etapa, definir prioridades, negociar melhor com fornecedores e direcionar o dinheiro para aquilo que realmente importa no seu grande dia.</p>
-      <a class="cta" data-whatsapp data-cta-position="hero" href="https://wa.me/5531972368967?text=Oi!%20Quero%20conhecer%20o%20Projeto%20SIM%20no%20Azul%20%F0%9F%92%99" target="_blank" rel="noopener noreferrer">💙 Quero descobrir como <span aria-hidden="true">↗</span></a>
-      <p class="microcopy">Baseado em uma estrutura que já ajudou mais de 150 noivas a adiantarem os planos do casamento.</p>
+      <p class="eyebrow">DIAGNÓSTICO GRATUITO • MENOS DE 1 MINUTO</p>
+      <h1 id="headline">Será que você consegue planejar seu casamento com <em>até R$10 mil?</em></h1>
+      <p class="intro">Responda 4 perguntas rápidas e descubra onde organização, prioridades e negociação podem fazer a maior diferença no seu orçamento.</p>
+
+      <button class="cta quiz-start" id="startQuiz" type="button">FAZER MEU DIAGNÓSTICO 💙 <span aria-hidden="true">→</span></button>
+      <p class="microcopy">Leva menos de 1 minuto • Resultado na hora</p>
+
+      <div class="proof-note" aria-label="Informação sobre a metodologia">
+        <span class="proof-icon" aria-hidden="true">✦</span>
+        <p>O Projeto SIM foi desenvolvido a partir de uma estrutura de planejamento já utilizada por mais de 150 noivas.</p>
+      </div>
     </section>
 
-    <section class="context" aria-labelledby="context-title">
-      <span class="detail" aria-hidden="true">✧</span>
-      <h2 id="context-title">Não é sobre escolher tudo mais barato.</h2>
-      <p>É sobre saber <strong>onde investir, onde economizar e como negociar melhor</strong> para que o orçamento não escape do controle.</p>
-      <p>Com o Projeto SIM no Azul, você conhece uma estratégia prática para organizar orçamento, fornecedores e decisões importantes do casamento com muito mais clareza.</p>
-      <p class="closing">Porque economizar no casamento não significa abrir mão do sonho. Significa gastar melhor em cada escolha.</p>
-      <a class="cta secondary" data-whatsapp data-cta-position="context" href="https://wa.me/5531972368967?text=Oi!%20Quero%20conhecer%20o%20Projeto%20SIM%20no%20Azul%20%F0%9F%92%99" target="_blank" rel="noopener noreferrer">Quero conhecer o Projeto SIM 💙 <span aria-hidden="true">↗</span></a>
-      <p class="microcopy">O orçamento final varia conforme cidade, número de convidados, escolhas e fornecedores.</p>
+    <section class="quiz-wrap hidden" id="quizSection" aria-live="polite">
+      <div class="quiz-card">
+        <div class="quiz-topline">
+          <span id="progressLabel">Pergunta 1 de 4</span>
+          <span id="progressPercent">25%</span>
+        </div>
+        <div class="progress-track" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+
+        <div class="quiz-step" data-step="1">
+          <p class="step-kicker">COMEÇANDO PELO TAMANHO</p>
+          <h2>Quantos convidados você imagina no seu casamento?</h2>
+          <div class="answers">
+            <button class="answer" type="button" data-question="convidados" data-value="ate_30" data-label="até 30 convidados">Até 30 convidados</button>
+            <button class="answer" type="button" data-question="convidados" data-value="31_50" data-label="31 a 50 convidados">31 a 50 convidados</button>
+            <button class="answer" type="button" data-question="convidados" data-value="51_70" data-label="51 a 70 convidados">51 a 70 convidados</button>
+            <button class="answer" type="button" data-question="convidados" data-value="mais_70" data-label="mais de 70 convidados">Mais de 70 convidados</button>
+          </div>
+        </div>
+
+        <div class="quiz-step hidden" data-step="2">
+          <p class="step-kicker">AGORA, O MOMENTO</p>
+          <h2>Em que fase do planejamento você está?</h2>
+          <div class="answers">
+            <button class="answer" type="button" data-question="fase" data-value="pesquisando" data-label="ainda estou pesquisando">Ainda estou pesquisando</button>
+            <button class="answer" type="button" data-question="fase" data-value="orcamentos" data-label="já comecei a pedir orçamentos">Já comecei a pedir orçamentos</button>
+            <button class="answer" type="button" data-question="fase" data-value="contratei" data-label="já contratei alguns fornecedores">Já contratei alguns fornecedores</button>
+            <button class="answer" type="button" data-question="fase" data-value="escapando" data-label="meu orçamento já começou a escapar">Meu orçamento já começou a escapar</button>
+          </div>
+        </div>
+
+        <div class="quiz-step hidden" data-step="3">
+          <p class="step-kicker">O QUE MAIS PESA HOJE?</p>
+          <h2>Qual é sua maior preocupação com o casamento?</h2>
+          <div class="answers">
+            <button class="answer" type="button" data-question="preocupacao" data-value="gastar_demais" data-label="gastar mais do que posso">Gastar mais do que posso</button>
+            <button class="answer" type="button" data-question="preocupacao" data-value="onde_economizar" data-label="não saber onde economizar">Não saber onde economizar</button>
+            <button class="answer" type="button" data-question="preocupacao" data-value="fornecedores" data-label="negociar com fornecedores">Negociar com fornecedores</button>
+            <button class="answer" type="button" data-question="preocupacao" data-value="organizacao" data-label="organizar tudo sem me perder">Organizar tudo sem me perder</button>
+          </div>
+        </div>
+
+        <div class="quiz-step hidden" data-step="4">
+          <p class="step-kicker">ÚLTIMA PERGUNTA</p>
+          <h2>Qual orçamento você gostaria de manter?</h2>
+          <div class="answers">
+            <button class="answer" type="button" data-question="orcamento" data-value="ate_10" data-label="até R$10 mil">Até R$10 mil</button>
+            <button class="answer" type="button" data-question="orcamento" data-value="10_15" data-label="entre R$10 mil e R$15 mil">Entre R$10 mil e R$15 mil</button>
+            <button class="answer" type="button" data-question="orcamento" data-value="15_20" data-label="entre R$15 mil e R$20 mil">Entre R$15 mil e R$20 mil</button>
+            <button class="answer" type="button" data-question="orcamento" data-value="indefinido" data-label="ainda não defini meu orçamento">Ainda não defini</button>
+          </div>
+        </div>
+
+        <button class="back-btn hidden" id="backQuestion" type="button">← Voltar</button>
+      </div>
+    </section>
+
+    <section class="result hidden" id="resultSection" aria-live="polite">
+      <div class="result-card">
+        <span class="result-badge">DIAGNÓSTICO CONCLUÍDO 💙</span>
+        <h2 id="resultTitle">Seu planejamento tem espaço para ficar muito mais estratégico.</h2>
+        <p id="resultText">Pelas suas respostas, organização, definição de prioridades e negociação podem fazer uma diferença importante no valor final do seu casamento.</p>
+
+        <div class="result-highlight">
+          <strong>O ponto principal:</strong>
+          <p>não é cortar tudo nem escolher sempre o mais barato. É saber <strong>onde investir, onde economizar e como negociar melhor.</strong></p>
+        </div>
+
+        <div class="offer-box">
+          <p class="offer-kicker">CONHEÇA O PROJETO SIM NO AZUL</p>
+          <h3>Um método prático para organizar seu casamento com orçamento-alvo de até R$10 mil.</h3>
+          <p>Você recebe uma estrutura de planejamento para organizar prioridades, orçamento e fornecedores com mais clareza — adaptando tudo à sua realidade.</p>
+          <p class="offer-proof">Baseado em uma estrutura de planejamento já utilizada por mais de 150 noivas.</p>
+        </div>
+
+        <a class="cta result-cta" id="resultWhatsapp" data-whatsapp data-cta-position="quiz_result" href="#" target="_blank" rel="noopener noreferrer">💙 QUERO VER COMO FUNCIONA NO WHATSAPP <span aria-hidden="true">↗</span></a>
+        <p class="microcopy">Sua mensagem já vai preparada com as respostas do diagnóstico.</p>
+        <p class="fineprint">O orçamento final depende de cidade, quantidade de convidados, escolhas e fornecedores. O valor de R$10 mil é uma meta de planejamento, não uma garantia.</p>
+      </div>
     </section>
   </main>
-  <footer><p>Projeto SIM no Azul</p><p class="slogan">Seu grande dia com equilíbrio.</p><a href="privacy.html">Política de Privacidade</a></footer>
+
+  <footer>
+    <p>Projeto SIM no Azul</p>
+    <p class="slogan">Seu grande dia com equilíbrio.</p>
+    <a href="privacy.html">Política de Privacidade</a>
+  </footer>
 </body>
 </html>
